@@ -1,0 +1,45 @@
+#include <PZEM004Tv30.h>
+#include <LiquidCrystal.h>
+#include <SD.h>
+#include <SPI.h>
+
+#define SD_PIN 4
+PZEM004Tv30 pzem(Serial2); // RX=16, TX=17 for Arduino Mega. Uno kosam SoftwareSerial use chey
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+float totalEnergy = 0;
+
+void setup() {
+  Serial.begin(9600);
+  lcd.begin(16, 2);
+  SD.begin(SD_PIN);
+  
+  lcd.print("Smart Energy Meter");
+  delay(2000);
+  
+  File file = SD.open("energy.csv", FILE_WRITE);
+  file.println("Time,Voltage,Current,Power,Energy");
+  file.close();
+}
+
+void loop() {
+  float voltage = pzem.voltage();
+  float current = pzem.current();
+  float power = pzem.power();
+  float energy = pzem.energy();
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("V:"); lcd.print(voltage); lcd.print(" C:"); lcd.print(current);
+  lcd.setCursor(0,1);
+  lcd.print("P:"); lcd.print(power); lcd.print(" E:"); lcd.print(energy);
+
+  File file = SD.open("energy.csv", FILE_WRITE);
+  file.print(millis()); file.print(",");
+  file.print(voltage); file.print(",");
+  file.print(current); file.print(",");
+  file.print(power); file.print(",");
+  file.println(energy);
+  file.close();
+
+  delay(2000); // 
